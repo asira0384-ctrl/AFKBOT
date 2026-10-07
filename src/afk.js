@@ -2,8 +2,8 @@ import { PermissionFlagsBits, ChannelType } from 'discord.js';
 import { resetRecord, updateRecord, dueReason } from './policy.js';
 
 export class Afk {
-  constructor(client, settings, voices) {
-    this.client = client; this.settings = settings; this.voices = voices;
+  constructor(client, settings, voices, mutes) {
+    this.client = client; this.settings = settings; this.voices = voices; this.mutes = mutes;
     this.records = new Map(); this.busy = false;
     client.on('voiceStateUpdate', (old, next) => {
       const key = `${next.guild.id}:${next.id}`;
@@ -73,7 +73,8 @@ export class Afk {
       const fresh = this.settings.get(guild.id);
       if ((reason === 'mute' ? fresh.muteTarget : fresh.silenceTarget) !== target.id || member.voice.channelId !== sourceId || dueReason({ config: fresh, voice: member.voice, member, record: { ...record, moving: false },
         now: Date.now(), monitored: this.voices.isMonitored(guild.id, sourceId), speaking: this.voices.isSpeaking(guild.id, member.id) }) !== reason) return;
-      await member.voice.setChannel(target, reason === 'mute' ? 'AFK: セルフミュート時間超過' : 'AFK: 無言時間超過');
+      if (!this.mutes) throw new Error('AFK mute managerが初期化されていません');
+      await this.mutes.move(member, target, reason === 'mute' ? 'AFK: セルフミュート時間超過' : 'AFK: 無言時間超過');
       await this.log(guild, fresh, `${member.user.tag} を <#${target.id}> に移動：${reason === 'mute' ? 'セルフミュート' : '無言'}時間超過`);
     } catch (e) {
       record.retryAfter = Date.now() + 60000;

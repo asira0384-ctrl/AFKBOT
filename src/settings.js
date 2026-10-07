@@ -4,7 +4,7 @@ import path from 'node:path';
 export const defaults = () => ({
   enabled: false, muteSeconds: 300, silenceSeconds: 600,
   muteTarget: null, silenceTarget: null, watchChannel: null,
-  exemptUsers: {}, exemptRoles: {}, ignoredChannels: [], logChannel: null,
+  exemptUsers: {}, exemptRoles: {}, managedMutes: {}, ignoredChannels: [], logChannel: null,
 });
 
 export class Settings {

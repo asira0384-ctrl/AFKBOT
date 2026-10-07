@@ -3,6 +3,7 @@ import { Client, GatewayIntentBits, Events, MessageFlags } from 'discord.js';
 import { Settings } from './settings.js';
 import { Voices } from './voices.js';
 import { Afk } from './afk.js';
+import { AfkMutes } from './afk-mutes.js';
 import { Music } from './music.js';
 import { register } from './register.js';
 import { handleAfk, handleAfkChannel, helpText } from './commands.js';
@@ -16,7 +17,8 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBit
   GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent], allowedMentions: { parse: [], repliedUser: false } });
 const settings = new Settings(process.env.DATA_DIR || './data');
 const voices = new Voices(client, settings);
-const afk = new Afk(client, settings, voices);
+const mutes = new AfkMutes(client, settings);
+const afk = new Afk(client, settings, voices, mutes);
 const music = new Music(client, voices);
 const prefix = process.env.PREFIX || '!';
 const musicCommands = new Set(['p','play','s','skip','q','queue','stop','leave','pause','resume','volume','clear','shuffle','np','nowplaying']);
@@ -26,7 +28,7 @@ client.once(Events.ClientReady, async c => {
   console.log(`Logged in as ${c.user.tag}`);
   try { await register(c.user.id, process.env.DISCORD_TOKEN); }
   catch (e) { console.error('Command registration failed:', e.message); }
-  afk.start();
+  mutes.start(); afk.start();
   for (const guild of client.guilds.cache.values()) voices.restoreWatch(guild).catch(e => voices.warn(guild.id, e.message));
 });
 client.on(Events.InteractionCreate, async i => {
@@ -73,7 +75,7 @@ process.on('unhandledRejection', e => console.error('Unhandled:', e instanceof E
 let closing = false;
 async function shutdown() {
   if (closing) return; closing = true;
-  afk.stop(); music.shutdown();
+  mutes.stop(); afk.stop(); music.shutdown();
   for (const id of [...voices.slots.keys()]) voices.destroy(id);
   client.destroy(); process.exit(0);
 }

@@ -1,4 +1,4 @@
-# Asira AFK + Music Bot v1.1
+# Asira AFK + Music Bot v1.2
 
 GitHubに入れてRailwayで動かすDiscord Botです。Node.js 24 / discord.js v14 / DAVE対応 @discordjs/voice。
 
@@ -29,6 +29,8 @@ GitHubに入れてRailwayで動かすDiscord Botです。Node.js 24 / discord.js
 | メッセージを送信・メッセージ履歴を読む | 返答と音楽案内 |
 | 接続・発言 | VC監視と音楽再生 |
 | メンバーを移動 | AFKの移動 |
+| メンバーをミュート | AFK移動時にサーバーミュート・退出時に解除 |
+| メンバーのスピーカーをミュート | AFK移動時にサーバースピーカーミュート・退出時に解除 |
 | ボイスチャンネルステータスを設定 | 曲名表示 |
 | チャンネルの管理 | 移動／切断後に旧VCの曲名を消す |
 
@@ -110,6 +112,18 @@ AFKの管理は「サーバー管理」権限がある人だけ。音楽コマ�
 古いバージョンの `watchChannel` 設定は使いません。`/afk watch` は廃止して自動選択になりました。
 Botが停止していた時間は数えません。再起動で時間計測は最初から始まります。
 
+## AFK移動時のサーバーミュート
+
+BotがAFKへ移動させた人には、サーバーミュートとサーバースピーカーミュートを両方付けます。
+そのAFK VCから別のVCへ移動すると、両方を自動解除します。
+VC自体から切断した場合、Discord APIは切断中の解除を受け付けないため、解除待ちを保存して**次のVC参加時に解除**します。
+本人が付けているセルフミュート／セルフスピーカーミュートは変更しません。
+手動でAFK VCへ入っただけの人や、BotがAFK移動させていない人のサーバーミュートには触れません。
+BotによるAFK移動時点で両方を付け、退出後は両方を解除します。すでに管理者が付けていたミュートも対象者については解除されます。
+Botロールと移動元・移動先VCで「メンバーをミュート」「メンバーのスピーカーをミュート」の権限を追加してください。
+解除に失敗したときは記録を残して再試行。再起動後も解除待ちを読み込みます（/data Volumeが必要）。
+AFK機能OFFでも、既にBotが付けたミュートの解除処理は動きます。
+
 ## 5. 音楽を使う
 
 VCへ参加して、Botが見られるテキストチャンネルで送信。
@@ -187,3 +201,5 @@ GitHub ActionsはAFK判定・設定永続化・入力解析・再生制御・自
 - https://developer.spotify.com/documentation/web-api/reference/get-track
 - https://docs.railway.com/builds/dockerfiles
 - https://docs.railway.com/volumes
+
+サーバーミュートAPIの参照：https://docs.discord.com/developers/resources/guild#modify-guild-member
